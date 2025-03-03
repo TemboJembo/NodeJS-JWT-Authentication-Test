@@ -2,8 +2,14 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+const { expressjwt: exjwt } = require("express-jwt");
 const app = express();
+
 const secretKey = 'Super Secret Key';
+const jwtMW = exjwt({
+    secret: secretKey,
+    algorithms: ['HS256']
+});
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true}));
 app.use((req, res, next) => {
@@ -32,7 +38,7 @@ app.post('/api/login', (req, res) => {
     
     for(let user of users){
         if(username == user.username && password == user.password){
-            let token = jwt.sign({id: user.id, username: user.username }, secretKey, { expiresIn: '7d'});
+            let token = jwt.sign({id: user.id, username: user.username }, secretKey, { expiresIn: '3m'});
             res.json({
                 success: true,
                 err: null,
@@ -47,6 +53,22 @@ app.post('/api/login', (req, res) => {
             });
         }
     }
+});
+
+app.get('/api/dashboard', jwtMW, (req, res) =>{
+    console.log(req);
+    res.json({
+        success: true,
+        myContent: 'Secret content for logged in'
+    });
+});
+
+app.get('/api/settings', jwtMW, (req, res) =>{
+    console.log(req);
+    res.json({
+        success: true,
+        myContent: 'This is the Settings Page!'
+    });
 });
 
 app.get('/', (req, res) => {
